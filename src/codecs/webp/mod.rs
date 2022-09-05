@@ -1,7 +1,7 @@
 //! Decoding and Encoding of WebP Images
 
 #[cfg(feature = "webp-encoder")]
-pub use self::encoder::{WebpEncoder, WebpQuality};
+pub use self::encoder::{WebPEncoder, WebPQuality};
 
 #[cfg(feature = "webp-encoder")]
 mod encoder;

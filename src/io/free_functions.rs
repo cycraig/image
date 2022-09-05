@@ -244,7 +244,7 @@ pub(crate) fn write_buffer_impl<W: std::io::Write + Seek>(
         }
         #[cfg(feature = "webp-encoder")]
         ImageOutputFormat::WebP => {
-            webp::WebpEncoder::new(buffered_write).write_image(buf, width, height, color)
+            webp::WebPEncoder::new(buffered_write).write_image(buf, width, height, color)
         }
 
         image::ImageOutputFormat::Unsupported(msg) => Err(ImageError::Unsupported(

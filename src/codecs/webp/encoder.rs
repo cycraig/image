@@ -8,6 +8,7 @@ use std::io::Write;
 use libwebp::{Encoder, PixelLayout, WebPMemory};
 
 use crate::error::EncodingError;
+use crate::ImageFormat::WebP;
 use crate::{ColorType, ImageEncoder};
 use crate::{ImageError, ImageFormat, ImageResult};
 
@@ -17,48 +18,54 @@ pub struct WebPEncoder<W> {
     quality: WebPQuality,
 }
 
+#[derive(Debug, Copy, Clone)]
+enum Quality {
+    Lossless,
+    Lossy(u8),
+}
+
 /// WebP encoder quality.
 #[derive(Debug, Copy, Clone)]
-pub enum WebPQuality {
-    /// Lossless encoding.
-    Lossless,
-    /// Lossy quality from 0 to 100. 0 = low quality, small size; 100 = high quality, large size.
-    Lossy(f32),
-}
+pub struct WebPQuality(Quality);
 
 impl WebPQuality {
     /// Minimum lossy quality value (0).
-    pub const MIN: f32 = 0_f32;
+    pub const MIN: u8 = 0;
     /// Maximum lossy quality value (100).
-    pub const MAX: f32 = 100_f32;
+    pub const MAX: u8 = 100;
     /// Default lossy quality, providing reasonable quality and file size (80).
-    pub const DEFAULT: f32 = 80_f32;
+    pub const DEFAULT: u8 = 80;
 
-    /// Clamps lossy quality between 0 and 100.
-    fn clamp(self) -> Self {
-        match self {
-            WebPQuality::Lossy(quality) => WebPQuality::Lossy(quality.clamp(Self::MIN, Self::MAX)),
-            lossless => lossless,
-        }
+    /// Lossless encoding.
+    pub fn lossless() -> Self {
+        Self(Quality::Lossless)
+    }
+
+    /// Lossy quality. 0 = low quality, small size; 100 = high quality, large size.
+    ///
+    /// Values are clamped from 0 to 100.
+    pub fn lossy(quality: u8) -> Self {
+        Self(Quality::lossy(quality.clamp(Self::MIN, Self::MAX)))
+    }
+}
+
+impl Default for WebPQuality {
+    fn default() -> Self {
+        Self::lossy(WebPQuality::DEFAULT)
     }
 }
 
 impl<W: Write> WebPEncoder<W> {
     /// Create a new encoder that writes its output to `w`.
     ///
-    /// Defaults to lossy encoding with maximum quality.
+    /// Defaults to lossy encoding, see [`WebPQuality::DEFAULT`].
     pub fn new(w: W) -> Self {
-        WebPEncoder::new_with_quality(w, WebPQuality::Lossy(WebPQuality::DEFAULT))
+        WebPEncoder::new_with_quality(w, WebPQuality::default())
     }
 
-    /// Create a new encoder with specified quality, that writes its output to `w`.
-    ///
-    /// Lossy qualities are clamped between 0 and 100.
+    /// Create a new encoder with the specified quality, that writes its output to `w`.
     pub fn new_with_quality(w: W, quality: WebPQuality) -> Self {
-        Self {
-            inner: w,
-            quality: quality.clamp(),
-        }
+        Self { inner: w, quality }
     }
 
     /// Encode image data with the indicated color type.
@@ -81,9 +88,9 @@ impl<W: Write> WebPEncoder<W> {
 
         // Call the native libwebp library to encode the image.
         let encoder = Encoder::new(data, layout, width, height);
-        let encoded: WebPMemory = match self.quality {
-            WebPQuality::Lossless => encoder.encode_lossless(),
-            WebPQuality::Lossy(quality) => encoder.encode(quality),
+        let encoded: WebPMemory = match self.quality.0 {
+            Quality::Lossless => encoder.encode_lossless(),
+            Quality::Lossy(quality) => encoder.encode(quality as f32),
         };
 
         // TODO: how to check if any errors occurred? Can errors occur?

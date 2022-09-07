@@ -12,7 +12,7 @@ pub use self::decoder::WebPDecoder;
 #[cfg(feature = "webp")]
 mod decoder;
 #[cfg(feature = "webp")]
-mod extended;
+mod transform;
 #[cfg(feature = "webp")]
 mod huffman;
 #[cfg(feature = "webp")]
@@ -22,7 +22,7 @@ mod lossless;
 #[cfg(feature = "webp")]
 mod lossless_transform;
 #[cfg(feature = "webp")]
-mod transform;
+mod extended;
 
 #[cfg(feature = "webp")]
 pub mod vp8;

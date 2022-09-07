@@ -224,12 +224,14 @@ mod tests {
         fn fuzz_webp_no_panic(data: Vec<u8>, width: u8, height: u8, quality: u8) -> bool {
             // Check random (usually invalid) parameters do not panic.
             let mut buffer = Vec::<u8>::new();
-            for webp_quality in [WebPQuality::lossless(), WebPQuality::lossy(quality)] {
-                buffer.clear();
-                let encoder = WebPEncoder::new_with_quality(&mut buffer, webp_quality);
-                // Ignore errors.
-                let _ = encoder
-                    .write_image(&image.data, image.width, image.height, image.color);
+            for color in [ColorType::Rgb8, ColorType::Rgba8] {
+                for webp_quality in [WebPQuality::lossless(), WebPQuality::lossy(quality)] {
+                    buffer.clear();
+                    let encoder = WebPEncoder::new_with_quality(&mut buffer, webp_quality);
+                    // Ignore errors.
+                    let _ = encoder
+                        .write_image(&data, width as u32, height as u32, color);
+                }
             }
             true
         }

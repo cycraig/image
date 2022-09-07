@@ -10,8 +10,7 @@ use libwebp::{Encoder, PixelLayout, WebPMemory};
 use crate::error::{
     EncodingError, ParameterError, ParameterErrorKind, UnsupportedError, UnsupportedErrorKind,
 };
-use crate::{ColorType, ImageEncoder};
-use crate::{ImageError, ImageFormat, ImageResult};
+use crate::{ColorType, ImageEncoder, ImageError, ImageFormat, ImageResult};
 
 /// WebP Encoder.
 pub struct WebPEncoder<W> {
